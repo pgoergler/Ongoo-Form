@@ -50,13 +50,11 @@ class SkipValidationOn extends AbstractValidator
                     return false;
                 }
                 $diff1 = \array_diff($this->triggerValue, $value);
-                \Logging\LoggersManager::getInstance()->get()->debug("{} - {} = {}", [$this->triggerValue, $value, $diff1]);
                 if (!empty($diff1))
                 {
                     return false;
                 }
                 $diff2 = \array_diff($value, $this->triggerValue);
-                \Logging\LoggersManager::getInstance()->get()->debug("{} - {} = {}", [$this->triggerValue, $value, $diff2]);
                 if (!empty($diff2))
                 {
                     return false;

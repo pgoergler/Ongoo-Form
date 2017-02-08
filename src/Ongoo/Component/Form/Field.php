@@ -587,7 +587,6 @@ class Field extends Observable
                     $this->addWarning($ex);
                 } catch (Exceptions\ErrorException $ex)
                 {
-                    // \Logging\LoggersManager::getInstance()->get()->error($ex);
                     if ($ex->shouldStopValidation())
                     {
                         throw $ex;
@@ -601,7 +600,6 @@ class Field extends Observable
             }
         } catch (Exceptions\ErrorException $e)
         {
-            \Logging\LoggersManager::getInstance()->get()->error($e->getMessage());
             $e->setInitialValue($initialValue);
             $e->setName("validator #$validatorIndex");
             $this->addError($e);
