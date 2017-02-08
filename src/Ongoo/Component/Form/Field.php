@@ -212,27 +212,6 @@ class Field extends Observable
 
     /**
      * 
-     * @return mixed
-     */
-    public function _getDefaultValue()
-    {
-        return $this->defaultValue;
-    }
-
-    /**
-     * 
-     * @param mixed $value
-     * @return \Ongoo\Component\Form\Field
-     */
-    public function _setDefaultValue($value)
-    {
-        $this->defaultValue = $value;
-        $this->setValue($value);
-        return $this;
-    }
-
-    /**
-     * 
      * @return \Ongoo\Component\Form\Field
      */
     public function setDefaultAsNotSetValue()
@@ -629,7 +608,6 @@ class Field extends Observable
             'name' => $this->getName(),
             'value' => $this->getValue(),
             'initial' => $this->getInitialValue(),
-                //'default' => $this->getDefaultValue()
         );
     }
 

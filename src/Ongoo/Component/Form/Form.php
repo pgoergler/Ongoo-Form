@@ -90,11 +90,6 @@ class Form extends Observable
         $field->on('warning', function($field, $warning) use(&$self){
             $self->setWarning(true);
         });
-        /*$self = &$this;
-        $field->on('success', function($field) use(&$self){
-            $self->trigger($field->getName() . '-success');
-            $self->trigger('field-success', $field);
-        });*/
         return $field;
     }
     
@@ -381,7 +376,6 @@ class Form extends Observable
                 {
                     $errors[$field->getName()] = $field->getErrors();
                 }
-                // $errors = array_merge($errors, $field->getErrors());
             }
 
             return $errors;
@@ -416,7 +410,6 @@ class Form extends Observable
                 {
                     $warnings[$field->getName()] = $field->getWarnings();
                 }
-                // $warnings = array_merge($warnings, $field->getWarnings());
             }
             return $warnings;
         }

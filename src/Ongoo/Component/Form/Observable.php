@@ -10,7 +10,7 @@ namespace Ongoo\Component\Form;
 class Observable
 {
 
-    protected $observers = array();
+    protected $observers;
     
     public function __construct()
     {
@@ -19,10 +19,13 @@ class Observable
 
     public function mergeEvents(Observable $other)
     {
-        foreach( $other->observers as $callable)
+        foreach( $other->observers as $event => $storage)
         {
-            $limit = $other->observers[$callable];
-            $this->observers->attach($callable, $limit);
+            foreach ($storage as $callable)
+            {
+                $limit = $storage[$callable];
+                $this->on($event, $callable, $limit);
+            }
         }
     }
     
