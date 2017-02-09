@@ -3,8 +3,8 @@
 namespace Ongoo\Component\Form;
 
 use Ongoo\Component\Form\Values\NotSetValue,
-    Ongoo\Component\Form\Values\NotConfiguredValue
-
+    Ongoo\Component\Form\Values\NotConfiguredValue,
+    Ongoo\Component\Observable\ObservableObject
 ;
 
 /**
@@ -12,7 +12,7 @@ use Ongoo\Component\Form\Values\NotSetValue,
  *
  * @author paul
  */
-class Field extends Observable
+class Field extends ObservableObject
 {
 
     protected $name;

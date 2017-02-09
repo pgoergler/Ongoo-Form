@@ -2,12 +2,14 @@
 
 namespace Ongoo\Component\Form;
 
+use Ongoo\Component\Observable\ObservableObject;
+
 /**
  * Description of Form
  *
  * @author paul
  */
-class Form extends Observable
+class Form extends ObservableObject
 {
 
     protected $fields;
@@ -74,16 +76,27 @@ class Form extends Observable
      */
     public function addField($fieldName)
     {
+        $self = &$this;
         $field = $this->getField($fieldName);
         if (null === $field)
         {
             $field = $this->makeField($fieldName);
             $this->fields[$fieldName] = &$field;
         }
-        $this->watch($field, null, $field->getName() . '-{event}');
-        $this->watch($field, null, 'field-{event}');
         
-        $self = &$this;
+        $field->on(null, function() use(&$self, &$field){
+            $args = func_get_args();
+            $eventName = \array_shift($args);
+            
+            $params1 = $args;
+            \array_unshift($params1, $field->getName() . '-' . $eventName);
+            call_user_func_array(array($self, 'trigger'), $params1);
+            
+            $params2 = $args;
+            \array_unshift($params2, 'field-' . $eventName);
+            call_user_func_array(array($self, 'trigger'), $params2);
+        });
+        
         $field->on('error', function($field, $error) use(&$self){
             $self->setError(true);
         });

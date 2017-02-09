@@ -7,7 +7,7 @@ namespace Ongoo\Component\Form\Validators;
  *
  * @author paul
  */
-abstract class AbstractValidator extends \Ongoo\Component\Form\Observable implements \Ongoo\Component\Form\Validator
+abstract class AbstractValidator extends \Ongoo\Component\Observable\ObservableObject implements \Ongoo\Component\Form\Validator
 {
 
     protected $errorIfNotSetValue = false;
