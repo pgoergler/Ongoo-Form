@@ -7,7 +7,7 @@ namespace Ongoo\Component\Form\tests\units\Sanitizers;
  *
  * @author paul
  */
-class TrimSanitizer extends \Atoum\Helpers\Tester
+class TrimSanitizer extends \mageekguy\atoum\test
 {
 
     public function testSanitizerValue()

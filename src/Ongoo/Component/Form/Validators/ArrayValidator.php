@@ -16,7 +16,7 @@ class ArrayValidator extends AbstractValidator
 
     protected function validateWithValue(\Ongoo\Component\Form\Field $field, $value)
     {
-        if (is_array($value) || ($value instanceof ArrayAccess && $value instanceof Traversable && $value instanceof Countable))
+        if (is_array($value) || ($value instanceof \ArrayAccess && $value instanceof \Traversable && $value instanceof \Countable))
         {
             return $this->success($field, $value);
         }

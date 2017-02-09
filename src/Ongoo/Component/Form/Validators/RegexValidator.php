@@ -27,14 +27,9 @@ class RegexValidator extends AbstractValidator
 
     protected function validateWithValue(\Ongoo\Component\Form\Field $field, $value)
     {
-        
-        if (is_null($value))
+        if (!\is_string($value))
         {
-            return true;
-        }
-        if (!is_string($value))
-        {
-            return $this->error($field, $value, "you must set a valid value");
+            return $this->error($field, $value, "you must set a valid value", array('{1}' => $this->getRegex()));
             //throw new \Ongoo\Component\Form\Exceptions\ErrorException($field, $value, $value, "you must set a valid value");
         }
 

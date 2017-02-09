@@ -42,7 +42,18 @@ abstract class InvalidFieldValueException extends \InvalidArgumentException
         }
         if (!array_key_exists('{value}', $context))
         {
-            $this->context['{value}'] = $value;
+            if( \is_object($value) )
+            {
+                $this->context['{value}'] = get_class($value);
+            }
+            elseif( \is_string($value) || \is_numeric($value) || \is_bool($value) )
+            {
+                $this->context['{value}'] = $value;
+            }
+            else 
+            {
+                $this->context['{value}'] = gettype($value);
+            }
         }
         if (!array_key_exists('{name}', $context))
         {

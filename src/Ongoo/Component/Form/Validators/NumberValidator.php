@@ -17,18 +17,8 @@ class NumberValidator extends RegexValidator
 
     public function __construct($min = null, $max = null, $type = 'number', $ifNotSet = false)
     {
-        if (func_num_args() >= 2)
-        {
-            $this->min = $min;
-            $this->max = $max;
-        } else if (func_num_args() == 1)
-        {
-            $this->max = $this->min = $min;
-        } else if (func_num_args() == 0)
-        {
-            $this->min = null;
-            $this->max = null;
-        }
+        $this->min = $min;
+        $this->max = $max;
 
         switch ($type)
         {
@@ -65,11 +55,6 @@ class NumberValidator extends RegexValidator
 
     protected function validateWithValue(\Ongoo\Component\Form\Field $field, $value)
     {
-        if (is_null($value))
-        {
-            return $this->success($field, $value);
-        }
-
         try
         {
             parent::validateWithValue($field, "$value");
