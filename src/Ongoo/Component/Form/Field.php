@@ -362,7 +362,13 @@ class Field extends ObservableObject
         {
             throw new \InvalidArgumentException('$sanitizer must be instance of \Ongoo\Component\Form\Sanitizer or callable ' . get_class($sanitizer) . ' given');
         }
-        $this->sanitizers[] = $sanitizer;
+        if( $sanitizer instanceof \Closure )
+        {
+            $this->sanitizers[] = $sanitizer->bindTo($this);
+        } else
+        {
+            $this->sanitizers[] = $sanitizer;
+        }
         return $this;
     }
 
@@ -524,7 +530,7 @@ class Field extends ObservableObject
         {
             $this->setDefaultAsNotSetValue();
         }
-        $initialValue = $value;
+        $initialValue = $this->getValue();
         $this->setValue($value);
 
         $validatorIndex = null;
@@ -553,7 +559,7 @@ class Field extends ObservableObject
 
         try
         {
-
+            $this->setValue($value);
             foreach ($this->validators as $validatorIndex => $validator)
             {
                 try
@@ -579,6 +585,7 @@ class Field extends ObservableObject
             }
         } catch (Exceptions\ErrorException $e)
         {
+            // $this->setValue($initialValue);
             $e->setInitialValue($initialValue);
             $e->setName("validator #$validatorIndex");
             $this->addError($e);
@@ -587,7 +594,6 @@ class Field extends ObservableObject
         }
 
         $this->setStatus(FieldStatus::SUCCESS);
-        $this->setValue($value);
 
         return true;
     }

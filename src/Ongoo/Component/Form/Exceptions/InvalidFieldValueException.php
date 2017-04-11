@@ -44,7 +44,7 @@ abstract class InvalidFieldValueException extends \InvalidArgumentException
         {
             if( \is_object($value) )
             {
-                $this->context['{value}'] = get_class($value);
+                $this->context['{value}'] = ($value instanceof \Ongoo\Component\Form\Values\NotSetValue) ? '' : get_class($value);
             }
             elseif( \is_string($value) || \is_numeric($value) || \is_bool($value) )
             {

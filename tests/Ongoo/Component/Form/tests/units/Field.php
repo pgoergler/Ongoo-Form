@@ -128,6 +128,15 @@ class Field extends \mageekguy\atoum\test
             $this->boolean($field->hasChanged())->isFalse();
             $this->boolean($field->isValueSet())->isTrue();
         }
+
+        {
+            $field = new \Ongoo\Component\Form\Field('field1');
+            $field->setValue("initial value");
+            $field->setValue("new value");
+            $this->string($field->getValue())->isEqualTo("new value");
+            $this->boolean($field->hasChanged())->isTrue();
+            $this->boolean($field->isValueSet())->isTrue();
+        }
     }
 
     public function testSanitizers()
@@ -249,7 +258,7 @@ class Field extends \mageekguy\atoum\test
                 ->boolean($field->hasError())->isTrue()
                 ->boolean($field->hasWarning())->isFalse()
                 //-
-                ->string($field->getValue())->isEqualTo('foo')
+                ->boolean($field->isValueSet())->isFalse()
                 //-
                 ->mock($mock1)->call('validateValue')
                         ->withArguments($field,'foo')
@@ -270,100 +279,144 @@ class Field extends \mageekguy\atoum\test
                 ->string($msg->getField()->getName())->isEqualTo('field1')
                 ->string($msg->getMessage())->isEqualTo($msg->getValue() . ' is not valid')
             ;
+                        
+        {
+            $field = new \Ongoo\Component\Form\Field('field2');
+            $field
+                ->addValidator(function($field, $value, $errorFn, $warningFn, $successFn) use(&$app){
+                  $field->setValue('validated value');
+                  return $successFn($field, $value);
+                });
+            ;
+            
+            $this
+                ->if($validated = $field->validate('foo'))
+                ->then
+                    ->boolean($validated)->isTrue()
+                    ->boolean($field->isValid())->isTrue()
+                    ->boolean($field->isValueSet())->isTrue()
+                    ->boolean($field->hasSuccess())->isTrue()
+                    ->boolean($field->hasError())->isFalse()
+                    ->boolean($field->hasWarning())->isFalse()
+                    //-
+                    ->string($field->getValue())->isEqualTo('validated value')
+            ;
+        }
     }
 
     public function testMandatoryValue()
     {
-        $field = new \Ongoo\Component\Form\Field('field1');
-        $field->setMandatory(true);
+        {
+            $field = new \Ongoo\Component\Form\Field('field1');
+            $field->setMandatory(true);
 
-        $this
-            ->if($validated = $field->validate(null))
-            ->then
-                ->boolean($validated)->isTrue()
-                ->boolean($field->isValid())->isTrue()
-                ->boolean($field->hasSuccess())->isTrue()
-                ->boolean($field->hasError())->isFalse()
-                ->boolean($field->hasWarning())->isFalse()
-                ->boolean($field->isValueSet())->isTrue()
-                //-
-                ->variable($field->getValue())->isNull();
+            $this
+                ->if($validated = $field->validate(null))
+                ->then
+                    ->boolean($validated)->isTrue()
+                    ->boolean($field->isValid())->isTrue()
+                    ->boolean($field->hasSuccess())->isTrue()
+                    ->boolean($field->hasError())->isFalse()
+                    ->boolean($field->hasWarning())->isFalse()
+                    ->boolean($field->isValueSet())->isTrue()
+                    //-
+                    ->variable($field->getValue())->isNull();
 
-        $this->if($validated = $field->validate(new \Ongoo\Component\Form\Values\NotSetValue()))
-            ->then
-                ->boolean($validated)->isFalse()
-                ->boolean($field->isValid())->isFalse()
-                ->boolean($field->hasSuccess())->isFalse()
-                ->boolean($field->hasError())->isTrue()
-                ->boolean($field->hasWarning())->isFalse()
-                ->boolean($field->isValueSet())->isFalse()
-                //-
-                ->object($field->getValue())->isInstanceOf('\Ongoo\Component\Form\Values\NotSetValue')
-                //-
-                ->and($errors = $field->getErrors())
-                ->array($errors)->hasSize(1)
-                //-
-                ->object($msg = $errors[0])->isInstanceOf('\Ongoo\Component\Form\Exceptions\ErrorException')
-                ->string($msg->getRawMessage())->isEqualTo('{name} is mandatory')
-                ->string($msg->getField()->getName())->isEqualTo('field1')
-                ->array($msg->getContext())->hasKey('{value}')
-                ->array($msg->getContext())->hasKey('{name}')
-                ->array($msg->getContext())->contains('field1')
-                ->string($msg->getMessage())->isEqualTo('field1 is mandatory')
-        ;
+            $this->if($validated = $field->validate(new \Ongoo\Component\Form\Values\NotSetValue()))
+                ->then
+                    ->boolean($validated)->isFalse()
+                    ->boolean($field->isValid())->isFalse()
+                    ->boolean($field->hasSuccess())->isFalse()
+                    ->boolean($field->hasError())->isTrue()
+                    ->boolean($field->hasWarning())->isFalse()
+                    ->boolean($field->isValueSet())->isFalse()
+                    //-
+                    ->object($field->getValue())->isInstanceOf('\Ongoo\Component\Form\Values\NotSetValue')
+                    //-
+                    ->and($errors = $field->getErrors())
+                    ->array($errors)->hasSize(1)
+                    //-
+                    ->object($msg = $errors[0])->isInstanceOf('\Ongoo\Component\Form\Exceptions\ErrorException')
+                    ->string($msg->getRawMessage())->isEqualTo('{name} is mandatory')
+                    ->string($msg->getField()->getName())->isEqualTo('field1')
+                    ->array($msg->getContext())->hasKey('{value}')
+                    ->array($msg->getContext())->hasKey('{name}')
+                    ->array($msg->getContext())->contains('field1')
+                    ->string($msg->getMessage())->isEqualTo('field1 is mandatory')
+            ;
+        }
+        
+        {
+            $field = new \Ongoo\Component\Form\Field('field2');
+            $field
+                ->setMandatory(true)
+                ->setValue('initial value')
+                ->setSanitizers([function($value){
+                    // always return NotSetValue()
+                    return new \Ongoo\Component\Form\Values\NotSetValue($value);
+                }]);
 
-        $field->setSanitizers([function($value){
-            // always return NotSetValue()
-            return new \Ongoo\Component\Form\Values\NotSetValue($value);
-        }]);
+            $this
+                ->if($validated = $field->validate('testMandatoryValue'))
+                ->then
+                    ->boolean($validated)->isFalse()
+                    ->boolean($field->isValid())->isFalse()
+                    ->boolean($field->hasSuccess())->isFalse()
+                    ->boolean($field->hasError())->isTrue()
+                    ->boolean($field->hasWarning())->isFalse()
+                    ->boolean($field->isValueSet())->isFalse()
+                    //-
+                    ->string($field->getValue())->isEqualTo('testMandatoryValue')
+                    //-
+                    ->and($errors = $field->getErrors())
+                    ->array($errors)->hasSize(1)
 
-        $this
-            ->if($validated = $field->validate('testMandatoryValue'))
-            ->then
-                ->boolean($validated)->isFalse()
-                ->boolean($field->isValid())->isFalse()
-                ->boolean($field->hasSuccess())->isFalse()
-                ->boolean($field->hasError())->isTrue()
-                ->boolean($field->hasWarning())->isFalse()
-                ->boolean($field->isValueSet())->isFalse()
-                //-
-                ->string($field->getValue())->isEqualTo('testMandatoryValue')
-                //-
-                ->and($errors = $field->getErrors())
-                ->array($errors)->hasSize(1)
+                    ->object($msg = $errors[0])->isInstanceOf(\Ongoo\Component\Form\Exceptions\MandatoryException::class)
+                    
+                    ->string($msg->getRawMessage())->isEqualTo('{name} is mandatory')
+                    ->string($msg->getMessage())->isEqualTo('field2 is mandatory')
+                    ->string($msg->getField()->getName())->isEqualTo('field2')
+                    ->array($msg->getContext())->hasKey('{initial_value}')
+                    ->array($msg->getContext())->hasKey('{value}')
+                    ->array($msg->getContext())->hasKey('{name}')
+                    ->array($msg->getContext())->string['{name}']->isEqualTo('field2')
+                    ->array($msg->getContext())->string['{initial_value}']->isEqualTo('initial value')
+                    ->array($msg->getContext())->string['{value}']->isEqualTo("");
+        }
 
-                ->object($msg = $errors[0])->isInstanceOf('\Ongoo\Component\Form\Exceptions\ErrorException')
-                ->string($msg->getRawMessage())->isEqualTo('{name} is mandatory')
-                ->string($msg->getMessage())->isEqualTo('field1 is mandatory')
-                ->string($msg->getField()->getName())->isEqualTo('field1')
-                ->array($msg->getContext())->hasKey('{value}')
-                ->array($msg->getContext())->hasKey('{name}')
-                ->array($msg->getContext())->contains('field1')
-                ->array($msg->getContext())->contains('testMandatoryValue');
+        {
+            $field = new \Ongoo\Component\Form\Field('field1');
+            $field
+                ->setMandatory(true)
+                ->setSanitizers([function($value){
+                    // always return NotSetValue()
+                    return new \Ongoo\Component\Form\Values\NotSetValue($value);
+                }]);
+            
+            $this->if($validated = $field->validate(new \Ongoo\Component\Form\Values\NotSetValue()))
+                ->then
+                    ->boolean($validated)->isFalse()
+                    ->boolean($field->isValid())->isFalse()
+                    ->boolean($field->hasSuccess())->isFalse()
+                    ->boolean($field->hasError())->isTrue()
+                    ->boolean($field->hasWarning())->isFalse()
+                    ->boolean($field->isValueSet())->isFalse()
+                    //-
+                    ->object($field->getValue())->isInstanceOf('\Ongoo\Component\Form\Values\NotSetValue')
+                    //-
+                    ->and($errors = $field->getErrors())
+                    ->array($errors)->hasSize(1)
 
-        $this->if($validated = $field->validate(new \Ongoo\Component\Form\Values\NotSetValue()))
-            ->then
-                ->boolean($validated)->isFalse()
-                ->boolean($field->isValid())->isFalse()
-                ->boolean($field->hasSuccess())->isFalse()
-                ->boolean($field->hasError())->isTrue()
-                ->boolean($field->hasWarning())->isFalse()
-                ->boolean($field->isValueSet())->isFalse()
-                //-
-                ->object($field->getValue())->isInstanceOf('\Ongoo\Component\Form\Values\NotSetValue')
-                //-
-                ->and($errors = $field->getErrors())
-                ->array($errors)->hasSize(1)
-
-                ->object($msg = $errors[0])->isInstanceOf('\Ongoo\Component\Form\Exceptions\ErrorException')
-                ->string($msg->getRawMessage())->isEqualTo('{name} is mandatory')
-                ->string($msg->getMessage())->isEqualTo('field1 is mandatory')
-                ->string($msg->getField()->getName())->isEqualTo('field1')
-                ->array($msg->getContext())->hasKey('{value}')
-                ->array($msg->getContext())->hasKey('{name}')
-                ->array($msg->getContext())->contains('field1')
-                ->object($msg->getValue())->isInstanceOf('\Ongoo\Component\Form\Values\NotSetValue')
-        ;
+                    ->object($msg = $errors[0])->isInstanceOf('\Ongoo\Component\Form\Exceptions\ErrorException')
+                    ->string($msg->getRawMessage())->isEqualTo('{name} is mandatory')
+                    ->string($msg->getMessage())->isEqualTo('field1 is mandatory')
+                    ->string($msg->getField()->getName())->isEqualTo('field1')
+                    ->array($msg->getContext())->hasKey('{value}')
+                    ->array($msg->getContext())->hasKey('{name}')
+                    ->array($msg->getContext())->contains('field1')
+                    ->object($msg->getValue())->isInstanceOf('\Ongoo\Component\Form\Values\NotSetValue')
+            ;
+        }
     }
 
     public function testMandatoryDefaultValue()
@@ -674,6 +727,8 @@ class Field extends \mageekguy\atoum\test
                 ->string($msg->getField()->getName())->isEqualTo('testErrors_1')
                 ->array($msg->getContext())->hasKey('{value}')
                 ->array($msg->getContext())->hasKey('{name}')
+                ->array($msg->getContext())->string['{initial_value}']->isEqualTo('testErrors initial value')
+                ->array($msg->getContext())->string['{value}']->isEqualTo('testErrors_value')
                 ->array($msg->getContext())->contains('testErrors_1')
                 ->string($msg->getValue())->isEqualTo('testErrors_value')
         ;
@@ -758,7 +813,7 @@ class Field extends \mageekguy\atoum\test
                 ->boolean($field->isValueSet())->isFalse()
                 ->boolean($field->hasChanged())->isFalse()
                 //-
-                ->object($field->getValue())->isInstanceOf('\Ongoo\Component\Form\Values\NotSetValue')
+                ->object($field->getValue())->isInstanceOf(\Ongoo\Component\Form\Values\NotSetValue::class)
                 //-
                 ->array($array = $field->getErrors())->hasSize(1)
                 ->object($msg = $array[0])->isInstanceOf('\Ongoo\Component\Form\Exceptions\ErrorException')
