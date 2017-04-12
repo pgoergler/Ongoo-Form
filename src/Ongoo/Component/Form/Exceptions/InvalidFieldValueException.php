@@ -158,13 +158,13 @@ abstract class InvalidFieldValueException extends \InvalidArgumentException
         $context = $this->context;
         $context['%accolate_open%'] = '{';
         $context['%accolate_close%'] = '}';
-        if (is_array($context['{value}']))
+        if (isset($context['{raw_value}']))
         {
-            $context['{value}'] = implode(', ', $context['{value}']);
+            unset($context['{raw_value}']);
         }
-        if (is_array($context['{initial_value}']))
+        if (isset($context['{raw_initial_value}']))
         {
-            $context['{initial_value}'] = implode(', ', $context['{initial_value}']);
+            unset($context['{raw_initial_value}']);
         }
         return \strtr($message, $context);
     }
