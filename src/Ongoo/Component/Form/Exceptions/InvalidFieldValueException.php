@@ -9,6 +9,29 @@ namespace Ongoo\Component\Form\Exceptions;
  */
 abstract class InvalidFieldValueException extends \InvalidArgumentException
 {
+    public static function stringify($value)
+    {
+        if( \is_object($value) )
+        {
+            return ($value instanceof \Ongoo\Component\Form\Values\NotSetValue) ? '' : get_class($value);
+        }
+        elseif( \is_bool($value) )
+        {
+            return $value ? 'true' : 'false';
+        }
+        elseif( \is_string($value) || \is_numeric($value) )
+        {
+            return $value;
+        }
+        elseif( \is_array($value) )
+        {
+            return implode(', ', $value);
+        }
+        else 
+        {
+            return gettype($value);
+        }
+    }
 
     protected $name;
     protected $field;
@@ -34,26 +57,18 @@ abstract class InvalidFieldValueException extends \InvalidArgumentException
         $this->rawMessage = $message;
         $this->initialValue = $initialValue;
         $this->value = $value;
-        $this->context = array();
+        $this->context = array(
+            '{raw_initial_value}' => $initialValue,
+            '{raw_value}' => $value
+        );
 
         if (!array_key_exists('{initial_value}', $context))
         {
-            $this->context['{initial_value}'] = $initialValue;
+            $this->setInitialValue($initialValue);
         }
         if (!array_key_exists('{value}', $context))
         {
-            if( \is_object($value) )
-            {
-                $this->context['{value}'] = ($value instanceof \Ongoo\Component\Form\Values\NotSetValue) ? '' : get_class($value);
-            }
-            elseif( \is_string($value) || \is_numeric($value) || \is_bool($value) )
-            {
-                $this->context['{value}'] = $value;
-            }
-            else 
-            {
-                $this->context['{value}'] = gettype($value);
-            }
+            $this->setValue($value);
         }
         if (!array_key_exists('{name}', $context))
         {
@@ -68,7 +83,7 @@ abstract class InvalidFieldValueException extends \InvalidArgumentException
             }
             $this->context[$k] = $v;
         }
-        
+
         $this->message = $this->toString();
     }
 
@@ -77,9 +92,18 @@ abstract class InvalidFieldValueException extends \InvalidArgumentException
         return $this->field;
     }
 
+    public function setValue($value)
+    {
+        $this->context['{raw_value}'] = $value;
+        $this->context['{value}'] = self::stringify($value);
+        $this->value = $value;
+        return $this;
+    }
+
     public function setInitialValue($initialValue)
     {
-        $this->context['{initial_value}'] = $initialValue;
+        $this->context['{raw_initial_value}'] = $initialValue;
+        $this->context['{initial_value}'] = self::stringify($initialValue);
         $this->initialValue = $initialValue;
         return $this;
     }
@@ -88,7 +112,7 @@ abstract class InvalidFieldValueException extends \InvalidArgumentException
     {
         return $this->initialValue;
     }
-    
+
     public function getRawMessage()
     {
         return $this->rawMessage;
@@ -130,15 +154,15 @@ abstract class InvalidFieldValueException extends \InvalidArgumentException
     {
         $message = preg_replace('#\\\{#', '%accolate_open%', is_null($forcedMessage) ? $this->getMessage() : $forcedMessage);
         $message = preg_replace('#\\\}#', '%accolate_close%', $message);
-        
+
         $context = $this->context;
         $context['%accolate_open%'] = '{';
         $context['%accolate_close%'] = '}';
-        if(is_array($context['{value}']) )
+        if (is_array($context['{value}']))
         {
             $context['{value}'] = implode(', ', $context['{value}']);
         }
-        if(is_array($context['{initial_value}']) )
+        if (is_array($context['{initial_value}']))
         {
             $context['{initial_value}'] = implode(', ', $context['{initial_value}']);
         }
@@ -146,5 +170,4 @@ abstract class InvalidFieldValueException extends \InvalidArgumentException
     }
 
     public abstract function shouldStopValidation();
-
 }
