@@ -32,7 +32,13 @@ class CallbackValidator extends AbstractValidator
         };
         
         $fn = $this->callback;
-        $result = call_user_func_array($fn, [$field, $value, $proxy('error'), $proxy('warning'), $proxy('success')]);
+        if( $fn instanceof \Closure )
+        {
+            $result = call_user_func_array($fn->bindTo($this), [$field, $value, $proxy('error'), $proxy('warning'), $proxy('success')]);
+        } else
+        {
+            $result = call_user_func_array($fn, [$field, $value, $proxy('error'), $proxy('warning'), $proxy('success')]);
+        }
         if( $result === null )
         {
             return $this->success($field, $value);
